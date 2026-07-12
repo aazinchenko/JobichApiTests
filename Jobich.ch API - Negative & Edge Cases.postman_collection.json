@@ -1,0 +1,3730 @@
+{
+  "info": {
+    "_postman_id": "35436cda-a7aa-4c84-be11-21845fa9acf7",
+    "name": "Jobich.ch API - Negative & Edge Cases",
+    "description": "Deliberately tries to break the API: missing/invalid params, boundary values, wrong types, injection attempts, wrong methods, bad auth, malformed bodies, and rate limiting. Goal is to verify the API fails gracefully and matches documented error handling, not to find a happy response.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "5736413"
+  },
+  "item": [
+    {
+      "name": "00_Health - edge cases",
+      "item": [
+        {
+          "name": "Wrong method: POST /health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([405,404]);",
+                  "});",
+                  "pm.test('Error response has error field when non-2xx', function () {",
+                  "    if (pm.response.code >= 400) {",
+                  "        const j = pm.response.json();",
+                  "        pm.expect(j).to.have.property('error');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Wrong method: DELETE /health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([405,404]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid db param value (non-numeric)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('does not crash on garbage db param', function () {",
+                  "    pm.expect(pm.response.code).to.not.eql(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health?db=abc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": [
+                {
+                  "key": "db",
+                  "value": "abc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "db param as array/injection-like",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400,500]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health?db[]=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": [
+                {
+                  "key": "db[]",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01_Public API /api/jobs - edge cases",
+      "item": [
+        {
+          "name": "No parameters at all (should use defaults)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('defaults applied, returns something sane', function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.jobs).to.be.an('array');",
+                  "    pm.expect(j.jobs.length).to.be.at.most(25); // documented default limit",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid canton code (non-existent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('invalid canton returns empty array, not error, or 400', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(pm.response.json().jobs).to.be.an('array');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?canton=XX",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "canton",
+                  "value": "XX"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid work_mode enum value",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?work_mode=Underwater",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "work_mode",
+                  "value": "Underwater"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid employment_type value",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?employment_type=Freelance-ish",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "employment_type",
+                  "value": "Freelance-ish"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "salary_min negative number",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('negative salary_min handled without 500', function () {",
+                  "    pm.expect(pm.response.code).to.not.eql(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?salary_min=-50000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "salary_min",
+                  "value": "-50000"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "salary_min non-numeric string",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?salary_min=abc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "salary_min",
+                  "value": "abc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "limit = 0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('limit=0 returns empty array or default, not crash', function () {",
+                  "    if (pm.response.code === 200) pm.expect(pm.response.json().jobs).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?limit=0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "limit over documented max (101)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('limit is clamped to max 100, not honoured verbatim', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(pm.response.json().jobs.length).to.be.at.most(100);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?limit=101",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "101"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "limit hugely over (100000)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?limit=100000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100000"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "limit negative",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?limit=-10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "-10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "offset negative",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?offset=-5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "offset",
+                  "value": "-5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "offset absurdly high (beyond total)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('offset beyond dataset returns empty array, not error', function () {",
+                  "    if (pm.response.code === 200) pm.expect(pm.response.json().jobs).to.be.an('array').that.is.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?offset=999999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "offset",
+                  "value": "999999999"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "sort = invalid value",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?sort=alphabetical_reverse_xyz",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "alphabetical_reverse_xyz"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Malformed multi-select (trailing/double commas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?canton=ZH,,BE,",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "canton",
+                  "value": "ZH,,BE,"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "q param extremely long (5000 chars)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400,414]);",
+                  "});",
+                  "pm.test('very long query does not crash server', function () {",
+                  "    pm.expect(pm.response.code).to.not.eql(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "q param with SQL injection payload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('SQL injection payload handled safely (no 500, no SQL error leaked)', function () {",
+                  "    pm.expect(pm.response.code).to.not.eql(500);",
+                  "    pm.expect(pm.response.text().toLowerCase()).to.not.include('syntax error');",
+                  "    pm.expect(pm.response.text().toLowerCase()).to.not.include('postgresql');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?q='; DROP TABLE jobs; --",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "'; DROP TABLE jobs; --"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "q param with XSS payload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('XSS payload is not reflected unescaped', function () {",
+                  "    pm.expect(pm.response.text()).to.not.include('<script>alert(1)</script>');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?q=<script>alert(1)</script>",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "<script>alert(1)</script>"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "q param with unicode/emoji",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?q=Entwickler 👨‍💻 日本語",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Entwickler 👨‍💻 日本語"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "language param invalid code",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?language=xx",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "language",
+                  "value": "xx"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "role_type invalid enum",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?role_type=Intern",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "role_type",
+                  "value": "Intern"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02_Public API /api/salary - edge cases",
+      "item": [
+        {
+          "name": "Missing required title param",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('400 with error message for missing title', function () {",
+                  "    pm.expect(pm.response.json()).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/salary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Empty title param",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/salary?title=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salary"
+              ],
+              "query": [
+                {
+                  "key": "title",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Whitespace-only title",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/salary?title=   ",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salary"
+              ],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "   "
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Title with no matching data (gibberish)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,404]);",
+                  "});",
+                  "pm.test('unknown title handled gracefully (count 0 or 404)', function () {",
+                  "    pm.expect(pm.response.code).to.not.eql(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/salary?title=zzqxnonexistentjobtitle123",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salary"
+              ],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "zzqxnonexistentjobtitle123"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Title extremely long (2000 chars)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400,414]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/salary?title=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salary"
+              ],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Title with SQL injection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('no db error leaked', function () {",
+                  "    pm.expect(pm.response.text().toLowerCase()).to.not.include('syntax error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/salary?title=engineer' OR '1'='1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salary"
+              ],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "engineer' OR '1'='1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Title as array instead of string",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/salary?title[]=engineer&title[]=developer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salary"
+              ],
+              "query": [
+                {
+                  "key": "title[]",
+                  "value": "engineer"
+                },
+                {
+                  "key": "title[]",
+                  "value": "developer"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03_Public API /api/translate - edge cases",
+      "item": [
+        {
+          "name": "Missing required text param",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?to=de",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "to",
+                  "value": "de"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Missing required to param",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=hello",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "hello"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid target language code",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=hello&to=xx",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "hello"
+                },
+                {
+                  "key": "to",
+                  "value": "xx"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid source language code",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=hello&to=de&from=zz",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "hello"
+                },
+                {
+                  "key": "to",
+                  "value": "de"
+                },
+                {
+                  "key": "from",
+                  "value": "zz"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Empty text value",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=&to=de",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": ""
+                },
+                {
+                  "key": "to",
+                  "value": "de"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Same source and target language",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=hello&to=en&from=en",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "hello"
+                },
+                {
+                  "key": "to",
+                  "value": "en"
+                },
+                {
+                  "key": "from",
+                  "value": "en"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Extremely long text (10000 chars)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400,413,414]);",
+                  "});",
+                  "pm.test('long text does not crash server', function () { pm.expect(pm.response.code).to.not.eql(500); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word &to=de",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word "
+                },
+                {
+                  "key": "to",
+                  "value": "de"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Text with mixed scripts/emoji",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=Hello 你好 مرحبا 👋&to=de",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "Hello 你好 مرحبا 👋"
+                },
+                {
+                  "key": "to",
+                  "value": "de"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04_CV Match /api/match - edge cases",
+      "item": [
+        {
+          "name": "Empty body (no text, no file)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('Error response has error field when non-2xx', function () {",
+                  "    if (pm.response.code >= 400) {",
+                  "        const j = pm.response.json();",
+                  "        pm.expect(j).to.have.property('error');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Text field empty string",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Malformed JSON body (syntax error)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('malformed JSON returns 400, not 500', function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"text\": \"missing closing brace\" ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Wrong Content-Type (text/plain body)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,415,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\":\"Senior Engineer\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Text field wrong type (number instead of string)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"text\": 12345 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Extremely long CV text (~50000 chars)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400,413]);",
+                  "});",
+                  "pm.test('very large payload handled without 500', function () { pm.expect(pm.response.code).to.not.eql(500); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. Senior Software Engineer. \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rate limit probe (send rapidly via Runner, 10 req/min limit)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Retry-After present when 429 triggered', function () {",
+                  "    if (pm.response.code === 429) {",
+                  "        pm.expect(pm.response.headers.has('Retry-After')).to.be.true;",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Rate limit probe request.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05_CV Match /api/match/analyze - edge cases",
+      "item": [
+        {
+          "name": "Missing all fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('Error response has error field when non-2xx', function () {",
+                  "    if (pm.response.code >= 400) {",
+                  "        const j = pm.response.json();",
+                  "        pm.expect(j).to.have.property('error');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match/analyze",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match",
+                "analyze"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Missing jobTitle only",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cvText\": \"Senior Engineer\",\n  \"jobDescription\": \"Backend role\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match/analyze",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match",
+                "analyze"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Empty cvText",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cvText\": \"\",\n  \"jobTitle\": \"Backend Engineer\",\n  \"jobDescription\": \"Python role\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match/analyze",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match",
+                "analyze"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "jobIndustry wrong type (number instead of string)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cvText\": \"Senior Engineer\",\n  \"jobTitle\": \"Backend Engineer\",\n  \"jobDescription\": \"Python role\",\n  \"jobIndustry\": 12345\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match/analyze",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match",
+                "analyze"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unexpected extra fields in body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('extra/malicious fields ignored safely', function () {",
+                  "    pm.expect(pm.response.code).to.not.eql(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cvText\": \"Senior Engineer\",\n  \"jobTitle\": \"Backend Engineer\",\n  \"jobDescription\": \"Python role\",\n  \"hackerField\": \"<script>alert(1)</script>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match/analyze",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match",
+                "analyze"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06_Subscription /api/subscribe - edge cases",
+      "item": [
+        {
+          "name": "Invalid email format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('invalid email rejected', function () { pm.expect(pm.response.json().error.toLowerCase()).to.include('email'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"developer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Missing email entirely",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subscription_type\": \"keyword\",\n  \"query\": \"developer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Missing subscription_type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"query\": \"developer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid subscription_type value",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"carrier_pigeon\",\n  \"query\": \"developer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "subscription_type=keyword but query missing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "subscription_type=cv but cv_embedding missing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"cv\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cv_embedding wrong type (string instead of array)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"cv\",\n  \"cv_embedding\": \"not-an-array\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Duplicate subscribe (same email/query twice - idempotency check)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('first subscribe succeeds', function () { pm.expect(pm.response.code).to.be.within(200,299); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"duplicate test query\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Duplicate subscribe - second identical call",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('duplicate handled gracefully (200 idempotent or 409 conflict)', function () {",
+                  "    pm.expect([200,201,409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"duplicate test query\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Email with SQL injection payload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('no db error leaked', function () { pm.expect(pm.response.text().toLowerCase()).to.not.include('syntax error'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test'; DROP TABLE subscribers; --@example.com\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"developer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07_Partner API - auth edge cases",
+      "item": [
+        {
+          "name": "Missing API key entirely",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401]);",
+                  "});",
+                  "pm.test('401 for missing key', function () { pm.expect(pm.response.json()).to.have.property('error'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?q=developer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "developer"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid/garbage API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "sk_totally_invalid_key_000",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?q=developer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "developer"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API key with wrong header casing (x-api-key lowercase)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,401]);",
+                  "});",
+                  "pm.test('header name case sensitivity documented', function () {",
+                  "    pm.expect(pm.response.code).to.not.eql(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?q=developer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "developer"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API key passed as query param instead of header (should NOT authenticate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401]);",
+                  "});",
+                  "pm.test('key in query string is ignored, header is required', function () {",
+                  "    pm.expect(pm.response.code).to.eql(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?q=developer&X-Api-Key={{api_key}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "developer"
+                },
+                {
+                  "key": "X-Api-Key",
+                  "value": "{{api_key}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Empty API key header",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": ""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?q=developer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "developer"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SQL injection inside API key header",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401]);",
+                  "});",
+                  "pm.test('no db error leaked', function () { pm.expect(pm.response.text().toLowerCase()).to.not.include('syntax error'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "' OR '1'='1"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?q=developer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "developer"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08_Partner API /jobs/search - edge cases (valid key)",
+      "item": [
+        {
+          "name": "Invalid canton with valid key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?canton=ZZ",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "canton",
+                  "value": "ZZ"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "limit over max with valid key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?limit=99999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "99999"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "offset negative with valid key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?offset=-1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "offset",
+                  "value": "-1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09_Partner API /jobs/changes - edge cases",
+      "item": [
+        {
+          "name": "Missing required since param",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('Error response has error field when non-2xx', function () {",
+                  "    if (pm.response.code >= 400) {",
+                  "        const j = pm.response.json();",
+                  "        pm.expect(j).to.have.property('error');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/changes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "changes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid since format (not ISO8601)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/changes?since=yesterday",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "changes"
+              ],
+              "query": [
+                {
+                  "key": "since",
+                  "value": "yesterday"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "since date in the future",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});",
+                  "pm.test('future since returns empty jobs, not error', function () {",
+                  "    if (pm.response.code === 200) pm.expect(pm.response.json().jobs).to.be.an('array').that.is.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/changes?since=2030-01-01T00:00:00Z",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "changes"
+              ],
+              "query": [
+                {
+                  "key": "since",
+                  "value": "2030-01-01T00:00:00Z"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "since date extremely old (before epoch-like)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/changes?since=1970-01-01T00:00:00Z",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "changes"
+              ],
+              "query": [
+                {
+                  "key": "since",
+                  "value": "1970-01-01T00:00:00Z"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "limit over documented default",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/changes?since=2026-01-01T00:00:00Z&limit=100000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "changes"
+              ],
+              "query": [
+                {
+                  "key": "since",
+                  "value": "2026-01-01T00:00:00Z"
+                },
+                {
+                  "key": "limit",
+                  "value": "100000"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10_Partner API /jobs/:id - edge cases",
+      "item": [
+        {
+          "name": "Non-existent job id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([404,400]);",
+                  "});",
+                  "pm.test('unknown id returns 404/400, not 500 or empty 200', function () { pm.expect(pm.response.code).to.not.eql(500); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/nonexistent-id-000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "nonexistent-id-000000"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Job id with SQL injection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,404]);",
+                  "});",
+                  "pm.test('no db error leaked', function () { pm.expect(pm.response.text().toLowerCase()).to.not.include('syntax error'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/1'%20OR%20'1'%3D'1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "1'%20OR%20'1'%3D'1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Job id with path traversal attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,404]);",
+                  "});",
+                  "pm.test('path traversal blocked', function () { pm.expect(pm.response.text()).to.not.include('root:'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/..%2F..%2F..%2Fetc%2Fpasswd",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "..%2F..%2F..%2Fetc%2Fpasswd"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Job id extremely long string",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,404,414]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Job id empty (trailing slash)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,404]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11_HTTP method mismatches (405 checks)",
+      "item": [
+        {
+          "name": "POST to GET-only /api/jobs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([405]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT to /api/subscribe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([405]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE to /api/v1/jobs/search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([405,401]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET to POST-only /api/match",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([405]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH to /health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns an expected/documented status', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([405]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "12_Rate limiting (run via Collection Runner with 0ms delay)",
+      "item": [
+        {
+          "name": "Public API burst probe (limit 100/min) - request A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Retry-After present if 429', function () { if (pm.response.code===429){ pm.expect(pm.response.headers.has('Retry-After')).to.be.true; } });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?limit=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Match/Subscribe burst probe (limit 10/min) - request A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Retry-After present if 429', function () { if (pm.response.code===429){ pm.expect(pm.response.headers.has('Retry-After')).to.be.true; } });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"rate limit probe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Partner API burst probe (limit 60/min) - request A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Retry-After present if 429', function () { if (pm.response.code===429){ pm.expect(pm.response.headers.has('Retry-After')).to.be.true; } });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?limit=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Response time is acceptable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "pm.test('Status code is a valid HTTP status (not a raw crash)', function () {",
+          "    pm.expect(pm.response.code).to.be.within(200, 599);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://jobich.ch"
+    }
+  ]
+}

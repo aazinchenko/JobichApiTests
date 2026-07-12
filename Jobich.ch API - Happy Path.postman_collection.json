@@ -1,0 +1,824 @@
+{
+  "info": {
+    "_postman_id": "6c0fa43f-ef26-47ca-87d2-5bda275c33dc",
+    "name": "Jobich.ch API - Happy Path",
+    "description": "One clean, successful request per endpoint. Meant to be run top-to-bottom (Collection Runner) to verify the whole API works end-to-end under normal conditions.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "5736413"
+  },
+  "item": [
+    {
+      "name": "01_Health",
+      "item": [
+        {
+          "name": "01 - Health check (basic)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is ok', function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.status).to.eql('ok');",
+                  "    pm.expect(j.uptime).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Health check with DB verification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('db check is ok', function () {",
+                  "    pm.expect(pm.response.json().db).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health?db=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": [
+                {
+                  "key": "db",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02_Public API",
+      "item": [
+        {
+          "name": "03 - Search jobs (basic query)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('has jobs array and pagination', function () {",
+                  "    pm.expect(j).to.have.property('jobs').that.is.an('array');",
+                  "    pm.expect(j).to.have.property('total').that.is.a('number');",
+                  "    pm.expect(j).to.have.property('facets');",
+                  "});",
+                  "if (j.jobs.length > 0) {",
+                  "    pm.collectionVariables.set('happy_job_title', j.jobs[0].title);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?q=developer&canton=ZH&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "developer"
+                },
+                {
+                  "key": "canton",
+                  "value": "ZH"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Search jobs (multi-select canton)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('multi-canton search returns array', function () {",
+                  "    pm.expect(pm.response.json().jobs).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?canton=ZH,BE,GE&limit=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "canton",
+                  "value": "ZH,BE,GE"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Search jobs (remote + relevance sort)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('remote jobs returned', function () {",
+                  "    pm.expect(pm.response.json().jobs).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?work_mode=Remote&sort=relevance&limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "work_mode",
+                  "value": "Remote"
+                },
+                {
+                  "key": "sort",
+                  "value": "relevance"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 - Search jobs (pagination page 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('offset respected', function () {",
+                  "    pm.expect(pm.response.json()).to.have.property('jobs');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?limit=10&offset=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 - Salary stats for common title",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('salary stats structure present', function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.be.an('object');",
+                  "    // NOTE: actual schema differs from docs - see bug report. Accept either shape:",
+                  "    const hasFlat = j.median !== undefined;",
+                  "    const hasNested = j.estimate !== undefined;",
+                  "    pm.expect(hasFlat || hasNested).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/salary?title=software engineer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salary"
+              ],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "software engineer"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 - Translate EN to DE - does not work",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('translation returned', function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property('translated');",
+                  "    pm.expect(j.to).to.eql('de');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=developer&to=de",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "developer"
+                },
+                {
+                  "key": "to",
+                  "value": "de"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 - Translate with explicit source language",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('translation with explicit from', function () {",
+                  "    pm.expect(pm.response.json()).to.have.property('translated');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/translate?text=Softwareentwickler&to=en&from=de",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "translate"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "Softwareentwickler"
+                },
+                {
+                  "key": "to",
+                  "value": "en"
+                },
+                {
+                  "key": "from",
+                  "value": "de"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03_CV Match API",
+      "item": [
+        {
+          "name": "10 - Match CV via text",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('match response has scores and cvInfo', function () {",
+                  "    pm.expect(j).to.have.property('matches').that.is.an('array');",
+                  "    pm.expect(j).to.have.property('cvInfo');",
+                  "    if (j.matches.length > 0) {",
+                  "        pm.expect(j.matches[0]).to.have.property('fitScore').that.is.within(0, 100);",
+                  "    }",
+                  "});",
+                  "if (j.matches && j.matches.length > 0) {",
+                  "    pm.collectionVariables.set('happy_job_title_for_analyze', j.matches[0].title);",
+                  "    pm.collectionVariables.set('happy_job_desc_for_analyze', j.matches[0].description || 'General role');",
+                  "    pm.collectionVariables.set('happy_job_industry_for_analyze', 'Technology & IT');",
+                  "    pm.collectionVariables.set('happy_job_location_for_analyze', j.matches[0].location || 'Zurich');",
+                  "    pm.collectionVariables.set('happy_company_for_analyze', j.matches[0].company || 'Example AG');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Senior Software Engineer with 8 years of experience in Python, AWS, Docker, and Kubernetes. Based in Zurich.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 - Deep match analysis (CV + job pair)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('analysis returned with recommendation', function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.analysis).to.have.property('scores');",
+                  "    pm.expect(['apply-strongly','apply-with-tailored-cv','apply-tactically','low-priority','do-not-apply']).to.include(j.analysis.recommendation);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cvText\": \"Senior Software Engineer with 8 years of experience in Python, AWS, Docker.\",\n  \"jobTitle\": \"Backend Engineer\",\n  \"jobDescription\": \"We need a Backend Engineer with Python and cloud experience.\",\n  \"jobIndustry\": \"Technology & IT\",\n  \"jobLocation\": \"Zurich\",\n  \"company\": \"Swiss Re\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match/analyze",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match",
+                "analyze"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04_Subscription API",
+      "item": [
+        {
+          "name": "12 - Subscribe by keyword",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('subscription accepted', function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "    // NOTE: field name in real response may differ from docs (see bug report) - check loosely",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(JSON.stringify(j)).to.match(/true|success|subscribed|ok/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"software engineer\",\n  \"filters\": {\n    \"industry\": \"IT & Software\",\n    \"canton\": \"ZH\",\n    \"work_mode\": \"Remote\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13 - Subscribe by CV (embedding-based)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('cv-based subscription accepted', function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"cv\",\n  \"cv_embedding\": [\n    0.023,\n    -0.015,\n    0.041\n  ],\n  \"cv_metadata\": {\n    \"skillsDetected\": [\n      \"Python\",\n      \"AWS\"\n    ],\n    \"locationsDetected\": [\n      \"Zurich\"\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscribe"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05_Partner API (v1)",
+      "item": [
+        {
+          "name": "14 - Partner search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.test('partner search returns paginated jobs', function () {",
+                  "    pm.expect(j).to.have.property('jobs').that.is.an('array');",
+                  "    pm.expect(j).to.have.property('total');",
+                  "});",
+                  "if (j.jobs && j.jobs.length > 0 && j.jobs[0].id) {",
+                  "    pm.collectionVariables.set('happy_job_id', j.jobs[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/search?q=developer&canton=ZH&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "developer"
+                },
+                {
+                  "key": "canton",
+                  "value": "ZH"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "15 - Partner changes since timestamp",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('changes since timestamp returned', function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property('jobs').that.is.an('array');",
+                  "    pm.expect(j).to.have.property('since');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/changes?since={{since_timestamp}}&limit=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "changes"
+              ],
+              "query": [
+                {
+                  "key": "since",
+                  "value": "{{since_timestamp}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "16 - Partner get single job by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('single job returned', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(pm.response.json()).to.have.property('id');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/{{happy_job_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "{{happy_job_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Status code is 2xx', function () {",
+          "    pm.expect(pm.response.code).to.be.within(200, 299);",
+          "});",
+          "pm.test('Response time is acceptable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+          "});",
+          "pm.test('Content-Type is JSON', function () {",
+          "    pm.response.to.have.header('Content-Type');",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});"
+        ]
+      }
+    },
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const since = new Date(Date.now() - 60*60*1000).toISOString();",
+          "pm.environment.set('since_timestamp', since);"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://jobich.ch"
+    },
+    {
+      "key": "happy_job_id",
+      "value": ""
+    },
+    {
+      "key": "happy_job_title",
+      "value": ""
+    },
+    {
+      "key": "happy_job_title_for_analyze",
+      "value": ""
+    },
+    {
+      "key": "happy_job_desc_for_analyze",
+      "value": ""
+    },
+    {
+      "key": "happy_job_industry_for_analyze",
+      "value": ""
+    },
+    {
+      "key": "happy_job_location_for_analyze",
+      "value": ""
+    },
+    {
+      "key": "happy_company_for_analyze",
+      "value": ""
+    }
+  ]
+}
