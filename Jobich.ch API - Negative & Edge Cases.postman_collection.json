@@ -3703,13 +3703,33 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
     }
   ],
   "event": [
     {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
       "listen": "test",
       "script": {
         "type": "text/javascript",
+        "requests": {},
         "exec": [
           "pm.test('Response time is acceptable', function () {",
           "    pm.expect(pm.response.responseTime).to.be.below(5000);",
@@ -3719,12 +3739,6 @@
           "});"
         ]
       }
-    }
-  ],
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "https://jobich.ch"
     }
   ]
 }

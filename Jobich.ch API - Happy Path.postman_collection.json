@@ -89,7 +89,6 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "const j = pm.response.json();",
                   "pm.test('has jobs array and pagination', function () {",
@@ -97,10 +96,11 @@
                   "    pm.expect(j).to.have.property('total').that.is.a('number');",
                   "    pm.expect(j).to.have.property('facets');",
                   "});",
-                  "if (j.jobs.length > 0) {",
-                  "    pm.collectionVariables.set('happy_job_title', j.jobs[0].title);",
-                  "}"
-                ]
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -267,17 +267,18 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('salary stats structure present', function () {",
                   "    const j = pm.response.json();",
                   "    pm.expect(j).to.be.an('object');",
-                  "    // NOTE: actual schema differs from docs - see bug report. Accept either shape:",
                   "    const hasFlat = j.median !== undefined;",
                   "    const hasNested = j.estimate !== undefined;",
                   "    pm.expect(hasFlat || hasNested).to.be.true;",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -459,14 +460,16 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('analysis returned with recommendation', function () {",
                   "    const j = pm.response.json();",
                   "    pm.expect(j.analysis).to.have.property('scores');",
                   "    pm.expect(['apply-strongly','apply-with-tailored-cv','apply-tactically','low-priority','do-not-apply']).to.include(j.analysis.recommendation);",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -480,7 +483,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cvText\": \"Senior Software Engineer with 8 years of experience in Python, AWS, Docker.\",\n  \"jobTitle\": \"Backend Engineer\",\n  \"jobDescription\": \"We need a Backend Engineer with Python and cloud experience.\",\n  \"jobIndustry\": \"Technology & IT\",\n  \"jobLocation\": \"Zurich\",\n  \"company\": \"Swiss Re\"\n}",
+              "raw": "{\n  \"cvText\": \"Senior Software Engineer with 8 years of experience in Python, AWS, Docker.\",\n  \"jobTitle\": \"{{happy_job_title_for_analyze}}\",\n  \"jobDescription\": \"{{happy_job_desc_for_analyze}}\",\n  \"jobIndustry\": \"{{happy_job_industry_for_analyze}}\",\n  \"jobLocation\": \"{{happy_job_location_for_analyze}}\",\n  \"company\": \"{{happy_company_for_analyze}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -512,15 +515,16 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('subscription accepted', function () {",
                   "    pm.expect(pm.response.code).to.be.within(200, 299);",
-                  "    // NOTE: field name in real response may differ from docs (see bug report) - check loosely",
                   "    const j = pm.response.json();",
                   "    pm.expect(JSON.stringify(j)).to.match(/true|success|subscribed|ok/i);",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -610,17 +614,19 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "const j = pm.response.json();",
                   "pm.test('partner search returns paginated jobs', function () {",
-                  "    pm.expect(j).to.have.property('jobs').that.is.an('array');",
+                  "    pm.expect(j).to.have.property('data').that.is.an('array');",
                   "    pm.expect(j).to.have.property('total');",
                   "});",
-                  "if (j.jobs && j.jobs.length > 0 && j.jobs[0].id) {",
-                  "    pm.collectionVariables.set('happy_job_id', j.jobs[0].id);",
+                  "if (j.data && j.data.length > 0 && j.data[0].id) {",
+                  "    pm.collectionVariables.set('happy_job_id', j.data[0].id);",
                   "}"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -634,7 +640,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/jobs/search?q=developer&canton=ZH&limit=10",
+              "raw": "{{base_url}}/api/v1/jobs/search?q=developer&canton=ZH&limit=10&industry=IT&offset=0",
               "host": [
                 "{{base_url}}"
               ],
@@ -656,6 +662,14 @@
                 {
                   "key": "limit",
                   "value": "10"
+                },
+                {
+                  "key": "industry",
+                  "value": "IT"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
                 }
               ]
             }
@@ -668,14 +682,16 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('changes since timestamp returned', function () {",
                   "    const j = pm.response.json();",
-                  "    pm.expect(j).to.have.property('jobs').that.is.an('array');",
-                  "    pm.expect(j).to.have.property('since');",
+                  "    pm.expect(j).to.have.property('added').that.is.an('array');",
+                  "    pm.expect(j).to.have.property('updated').that.is.an('array');",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -719,14 +735,18 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('single job returned', function () {",
                   "    if (pm.response.code === 200) {",
-                  "        pm.expect(pm.response.json()).to.have.property('id');",
+                  "        const j = pm.response.json();",
+                  "        pm.expect(j).to.have.property('data');",
+                  "        pm.expect(j.data).to.have.property('id');",
                   "    }",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -759,9 +779,21 @@
   ],
   "event": [
     {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "requests": {},
+        "exec": [
+          "const since = new Date(Date.now() - 60*60*1000).toISOString();",
+          "pm.environment.set('since_timestamp', since);"
+        ]
+      }
+    },
+    {
       "listen": "test",
       "script": {
         "type": "text/javascript",
+        "requests": {},
         "exec": [
           "pm.test('Status code is 2xx', function () {",
           "    pm.expect(pm.response.code).to.be.within(200, 299);",
@@ -775,29 +807,11 @@
           "});"
         ]
       }
-    },
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "const since = new Date(Date.now() - 60*60*1000).toISOString();",
-          "pm.environment.set('since_timestamp', since);"
-        ]
-      }
     }
   ],
   "variable": [
     {
-      "key": "base_url",
-      "value": "https://jobich.ch"
-    },
-    {
       "key": "happy_job_id",
-      "value": ""
-    },
-    {
-      "key": "happy_job_title",
       "value": ""
     },
     {
