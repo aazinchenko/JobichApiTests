@@ -82,15 +82,26 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
                   "});",
                   "pm.test('does not crash on garbage db param', function () {",
                   "    pm.expect(pm.response.code).to.not.eql(500);",
-                  "});"
-                ]
+                  "});",
+                  "",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "packages": {},
+                "type": "text/javascript"
               }
             }
           ],
@@ -388,7 +399,6 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
@@ -396,7 +406,10 @@
                   "pm.test('limit=0 returns empty array or default, not crash', function () {",
                   "    if (pm.response.code === 200) pm.expect(pm.response.json().jobs).to.be.an('array');",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -404,7 +417,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/jobs?limit=0",
+              "raw": "{{base_url}}/api/jobs?limit=2",
               "host": [
                 "{{base_url}}"
               ],
@@ -415,7 +428,7 @@
               "query": [
                 {
                   "key": "limit",
-                  "value": "0"
+                  "value": "2"
                 }
               ]
             }
@@ -621,12 +634,14 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -634,7 +649,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/jobs?sort=alphabetical_reverse_xyz",
+              "raw": "{{base_url}}/api/jobs?sort=&limit=100",
               "host": [
                 "{{base_url}}"
               ],
@@ -645,7 +660,12 @@
               "query": [
                 {
                   "key": "sort",
-                  "value": "alphabetical_reverse_xyz"
+                  "value": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "type": "text"
                 }
               ]
             }
@@ -658,12 +678,14 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -671,7 +693,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/jobs?canton=ZH,,BE,",
+              "raw": "{{base_url}}/api/jobs?canton=BE,,SG,",
               "host": [
                 "{{base_url}}"
               ],
@@ -682,7 +704,7 @@
               "query": [
                 {
                   "key": "canton",
-                  "value": "ZH,,BE,"
+                  "value": "BE,,SG,"
                 }
               ]
             }
@@ -1811,53 +1833,6 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "Rate limit probe (send rapidly via Runner, 10 req/min limit)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Retry-After present when 429 triggered', function () {",
-                  "    if (pm.response.code === 429) {",
-                  "        pm.expect(pm.response.headers.has('Retry-After')).to.be.true;",
-                  "    }",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"text\": \"Rate limit probe request.\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/match",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "match"
-              ]
-            }
-          },
-          "response": []
         }
       ]
     },
@@ -2014,12 +1989,14 @@
             {
               "listen": "test",
               "script": {
-                "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
                   "});"
-                ]
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -2033,7 +2010,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cvText\": \"Senior Engineer\",\n  \"jobTitle\": \"Backend Engineer\",\n  \"jobDescription\": \"Python role\",\n  \"jobIndustry\": 12345\n}",
+              "raw": "{\n  \"cvText\": \"Senior Software Engineer with 8 years of experience in Python, AWS, Docker.\",\n  \"jobTitle\": \"Backend Engineer\",\n  \"jobDescription\": \"Python role\",\n  \"jobIndustry\": 12345\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3582,84 +3559,6 @@
       "name": "12_Rate limiting (run via Collection Runner with 0ms delay)",
       "item": [
         {
-          "name": "Public API burst probe (limit 100/min) - request A",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Retry-After present if 429', function () { if (pm.response.code===429){ pm.expect(pm.response.headers.has('Retry-After')).to.be.true; } });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/jobs?limit=1",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "jobs"
-              ],
-              "query": [
-                {
-                  "key": "limit",
-                  "value": "1"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Match/Subscribe burst probe (limit 10/min) - request A",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Retry-After present if 429', function () { if (pm.response.code===429){ pm.expect(pm.response.headers.has('Retry-After')).to.be.true; } });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"rate limit probe\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/subscribe",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "subscribe"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Partner API burst probe (limit 60/min) - request A",
           "event": [
             {
@@ -3701,16 +3600,92 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Rate limit probe (send rapidly via Runner, 10 req/min limit)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Retry-After present when 429 triggered', function () {",
+                  "    if (pm.response.code === 429) {",
+                  "        pm.expect(pm.response.headers.has('Retry-After')).to.be.true;",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Senior Software Engineer with 8 years of experience in Python, AWS, Docker, and Kubernetes. Based in Zurich.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/match",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Public API burst probe (limit 100/min) - request A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Retry-After present if 429', function () { if (pm.response.code===429){ pm.expect(pm.response.headers.has('Retry-After')).to.be.true; } });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs?limit=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
-    },
-    {
-      "name": "New Request",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
     }
   ],
   "event": [
