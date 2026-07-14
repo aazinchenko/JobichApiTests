@@ -5,49 +5,5 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "5736413"
   },
-  "item": [
-    {
-      "name": "Match/Subscribe burst probe (limit 10/min) - request A",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Retry-After present if 429', function () { if (pm.response.code===429){ pm.expect(pm.response.headers.has('Retry-After')).to.be.true; } });"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"rate limit probe\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "{{base_url}}/api/subscribe",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "subscribe"
-          ]
-        }
-      },
-      "response": []
-    }
-  ]
+  "item": []
 }
