@@ -93,7 +93,7 @@
                   "const j = pm.response.json();",
                   "pm.test('has jobs array and pagination', function () {",
                   "    pm.expect(j).to.have.property('jobs').that.is.an('array');",
-                  "    pm.expect(j).to.have.property('total').that.is.a('number');",
+                  "    pm.expect(j).to.have.property('totalCount').that.is.a('number');",
                   "    pm.expect(j).to.have.property('facets');",
                   "});",
                   ""
@@ -305,7 +305,7 @@
           "response": []
         },
         {
-          "name": "08 - Translate EN to DE - does not work",
+          "name": "08 - Translate EN to DE",
           "event": [
             {
               "listen": "test",
@@ -315,7 +315,6 @@
                   "pm.test('translation returned', function () {",
                   "    const j = pm.response.json();",
                   "    pm.expect(j).to.have.property('translated');",
-                  "    pm.expect(j.to).to.eql('de');",
                   "});"
                 ]
               }

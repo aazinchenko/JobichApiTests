@@ -1258,15 +1258,16 @@
           "response": []
         },
         {
-          "name": "Missing required to param",
+          "name": "Missing to param (defaults to en)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Returns an expected/documented status', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "pm.test('to defaults to en and request succeeds', function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "    pm.expect(pm.response.json()).to.have.property('translated');",
                   "});"
                 ]
               }
@@ -1899,8 +1900,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Returns an expected/documented status', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "pm.test('cvText and jobTitle are required together', function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "    pm.expect(pm.response.json().error).to.include('jobTitle');",
                   "});"
                 ]
               }
@@ -1945,8 +1947,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Returns an expected/documented status', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
+                  "pm.test('empty cvText rejected as too short', function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
                   "});"
                 ]
               }
@@ -3057,11 +3059,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Returns an expected/documented status', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200,400]);",
-                  "});",
-                  "pm.test('future since returns empty jobs, not error', function () {",
-                  "    if (pm.response.code === 200) pm.expect(pm.response.json().jobs).to.be.an('array').that.is.empty;",
+                  "pm.test('future since is rejected', function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "    pm.expect(pm.response.json().error).to.include('future');",
                   "});"
                 ]
               }
@@ -3399,7 +3399,7 @@
       "name": "11_HTTP method mismatches (405 checks)",
       "item": [
         {
-          "name": "POST to GET-only /api/jobs",
+          "name": "POST to /api/jobs without a recognized action",
           "event": [
             {
               "listen": "test",
@@ -3407,7 +3407,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([405]);",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400,405]);",
                   "});"
                 ]
               }
