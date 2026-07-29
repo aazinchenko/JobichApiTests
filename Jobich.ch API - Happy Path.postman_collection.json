@@ -538,7 +538,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"software engineer\",\n  \"filters\": {\n    \"industry\": \"IT & Software\",\n    \"canton\": \"ZH\",\n    \"work_mode\": \"Remote\"\n  }\n}",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"query\",\n  \"query\": \"software engineer\",\n  \"filters\": {\n    \"industry\": \"IT & Software\",\n    \"canton\": \"ZH\",\n    \"work_mode\": \"Remote\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"

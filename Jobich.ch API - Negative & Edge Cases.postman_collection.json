@@ -2185,8 +2185,9 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
-                  "});"
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "pm.test('defaults to query type and succeeds', function () { pm.expect(pm.response.json().ok).to.eql(true); });"
                 ]
               }
             }
@@ -2275,8 +2276,9 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
-                  "});"
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('rejected as invalid subscription_type (not missing query)', function () { pm.expect(pm.response.json().error).to.include('Invalid subscription_type'); });"
                 ]
               }
             }
@@ -2320,8 +2322,9 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Returns an expected/documented status', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([400,200]);",
-                  "});"
+                  "    pm.expect(pm.response.code).to.be.oneOf([400]);",
+                  "});",
+                  "pm.test('missing cv_embedding rejected', function () { pm.expect(pm.response.json().error).to.include('CV embedding'); });"
                 ]
               }
             }
@@ -2409,7 +2412,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('first subscribe succeeds', function () { pm.expect(pm.response.code).to.be.within(200,299); });"
+                  "pm.test('first subscribe succeeds', function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "    pm.expect(pm.response.json().ok).to.eql(true);",
+                  "});"
                 ]
               }
             }
@@ -2424,7 +2430,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"duplicate test query\"\n}",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"query\",\n  \"query\": \"duplicate test query\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2452,8 +2458,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('duplicate handled gracefully (200 idempotent or 409 conflict)', function () {",
-                  "    pm.expect([200,201,409]).to.include(pm.response.code);",
+                  "pm.test('duplicate handled idempotently (ON CONFLICT DO UPDATE, always 200)', function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "    pm.expect(pm.response.json().ok).to.eql(true);",
                   "});"
                 ]
               }
@@ -2469,7 +2476,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"keyword\",\n  \"query\": \"duplicate test query\"\n}",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"subscription_type\": \"query\",\n  \"query\": \"duplicate test query\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
